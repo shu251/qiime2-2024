@@ -66,7 +66,15 @@ module load R_tamu/4.3.1
 Rscript r-scripts/create-manifest.R
 ```
 
-## 3.0 Import sequences as QIIME2 artifact files
+Make sure you know the complete path for the location of your manifest file. For example, mine is `/home/skhu/qiime2-2024/manifest`. We will use this in step 4.0 below.
+
+## 3.0 Using QIIME2 with SLURM
+
+
+
+
+
+## 4.0 Import sequences as QIIME2 artifact files
 
 The rest of the steps are working in QIIME2 and we will use SLURM scripts to submit all the jobs. Each step is separated by a SLURM script below so we can view each of the outputs.
 
