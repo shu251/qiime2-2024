@@ -70,23 +70,80 @@ Make sure you know the complete path for the location of your manifest file. For
 
 ## 3.0 Using QIIME2 with SLURM
 
+There are a lot of great resources on the TAMU HPRC wiki for how to set up your slurm script. See the `template.slurm` and these resources to get started.
+
+### 3.1 Learn a text editor
+
+You need to learn to use a text editor on the command line, like [nano](https://www.nano-editor.org/dist/latest/cheatsheet.html). To edit the template script, navigate to the slurm script directory and type `nano template.slurm`. Use arrow keys to edit the job name, output log file name, specs for the set of commands you want to run, and more.
+
+For example, to run the above R script using slurm, you would edit your slurm script to look like this:
+```
+#!/bin/bash
+##ENVIRONMENT SETTINGS; CHANGE WITH CAUTION
+#SBATCH --export=NONE        #Do not propagate environment
+#SBATCH --get-user-env=L     #Replicate login environment
+
+##NECESSARY JOB SPECIFICATIONS
+#SBATCH --job-name=making-manifest     
+#SBATCH --time=00:10:00            
+#SBATCH --ntasks=1                 
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=1GB               
+#SBATCH --output=make-manifest-file.%j   
+
+module load GCC/12.2.0
+module load OpenMPI/4.1.4
+module load R_tamu/4.3.1
+
+Rscript r-scripts/create-manifest.R
+```
+
+To close the text editor, use CTRL+X. Answer "Yes" or "Y" to save your work. Then change the file name to something like: *make-manifest.slurm*. Answer yes to saving it under a new file name.
 
 
+Then run `sbatch make-manifest.slurm`. 
+
+### 3.2 QIIME2 on SLURM
+
+To run the other steps below, you need to use `module load QIIME2/2023.2` before your QIIME2 commands in your SLURM script. An example is here:
+
+```
+#!/bin/bash
+##ENVIRONMENT SETTINGS; CHANGE WITH CAUTION
+#SBATCH --export=NONE        #Do not propagate environment
+#SBATCH --get-user-env=L     #Replicate login environment
+
+##NECESSARY JOB SPECIFICATIONS
+#SBATCH --job-name=qiime2     
+#SBATCH --time=72:00:00            # 72 hours
+#SBATCH --ntasks=1                 
+#SBATCH --cpus-per-task=32        # 32 threads
+#SBATCH --mem=340GB               # lots of memory, but never the maximum (which is 384G)
+#SBATCH --output=qiime2-output-log.%j  
+
+# Load qiime2
+module load QIIME2/2023.2
+
+# use qiime2 below:
+
+```
 
 
 ## 4.0 Import sequences as QIIME2 artifact files
 
-The rest of the steps are working in QIIME2 and we will use SLURM scripts to submit all the jobs. Each step is separated by a SLURM script below so we can view each of the outputs.
+The rest of the steps are working in QIIME2 and we will use SLURM scripts to submit all the jobs. Each step below reports the QIIME2 specific commands to write below your #SBATCH lines in a slurm script. Keep this in mind.
 
+
+First import all sequences. The `manifest` file reports the location of each of your files. When working on an HPC, always write files to _your scratch space_. For example, all of the files for this tutorial will be written to my scratch directory located here: `/scratch/user/skhu/amplicon-output`. If the below commands specify *$SCRATCH*, it means you replace this with your scratch directory.
 ```
-module load QIIME2/2023.2
-
 qiime tools import \
   --type 'SampleData[PairedEndSequencesWithQuality]' \ # See "importing data" to determine
-  --input-path pe-64-manifest \ # Location of manifest file
-  --output-path paired-end-demux.qza \ # Location for output qiime2 artifacts
+  --input-path /home/skhu/qiime2-2024/manifest \ # Location of manifest file
+  --output-path $SCRATCH/paired-end-input.qza \ # Location for output qiime2 artifacts
   --input-format PairedEndFastqManifestPhred33V2 #see option for changing to Phred 64 if needed
 ```
+
+
 
 
 
