@@ -135,6 +135,7 @@ The rest of the steps are working in QIIME2 and we will use SLURM scripts to sub
 
 
 First import all sequences. The `manifest` file reports the location of each of your files. When working on an HPC, always write files to _your scratch space_. For example, all of the files for this tutorial will be written to my scratch directory located here: `/scratch/user/skhu/amplicon-output`. If the below commands specify *$SCRATCH*, it means you replace this with your scratch directory.
+
 ```
 qiime tools import \
   --type 'SampleData[PairedEndSequencesWithQuality]' \ # See "importing data" to determine
@@ -143,7 +144,24 @@ qiime tools import \
   --input-format PairedEndFastqManifestPhred33V2 #see option for changing to Phred 64 if needed
 ```
 
+### 4.1 Summarize main files
+
+You can use the `demux summarize` argument to convert any artifact file to a `.qzv` file. This can be drag-dropped to the [QIIME2 viewer](https://view.qiime2.org) webpage to get a visual of your data.
+
+```
+qiime demux summarize \      
+        --i-data $SCRATCH/paired-end-input.qza \                 
+        --o-visualization $SCRATCH/viz/paired-end-input.qzv
+```
+
+## 5.0 Remove primers
 
 
+## 6.0 Run DADA2
 
+### 6.1 Run DADA2 with exisiting references
+
+## 7.0 Convert files
+
+## 8.0 Taxonomy assignment
 
