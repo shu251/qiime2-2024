@@ -44,6 +44,6 @@ manifest <- paths_run %>%
 	select('sample-id' = SAMPLEID, `forward-absolute-filepath`, `reverse-absolute-filepath`)
 
 # Write output as a manifest file
-write.table(manifest, file = "/home/skhu/amplicon-tutorial/manifest", quote=FALSE,col.names=TRUE,row.names=FALSE,sep="\t")
+write.table(manifest, file = "/home/skhu/qiime2-2024/manifest", quote=FALSE,col.names=TRUE,row.names=FALSE,sep="\t")
 
 
