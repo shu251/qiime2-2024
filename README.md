@@ -140,7 +140,7 @@ First import all sequences. The `manifest` file reports the location of each of 
 qiime tools import \
   --type 'SampleData[PairedEndSequencesWithQuality]' \ # See "importing data" to determine
   --input-path /home/skhu/qiime2-2024/manifest \ # Location of manifest file
-  --output-path $SCRATCH/paired-end-input.qza \ # Location for output qiime2 artifacts
+  --output-path $SCRATCH/amplicon-output/paired-end-input.qza \ # Location for output qiime2 artifacts
   --input-format PairedEndFastqManifestPhred33V2 #see option for changing to Phred 64 if needed
 ```
 
@@ -148,20 +148,98 @@ qiime tools import \
 
 You can use the `demux summarize` argument to convert any artifact file to a `.qzv` file. This can be drag-dropped to the [QIIME2 viewer](https://view.qiime2.org) webpage to get a visual of your data.
 
+
+We will include this for each step individually. You will have the option to view these files later. 
+
 ```
 qiime demux summarize \      
-        --i-data $SCRATCH/paired-end-input.qza \                 
-        --o-visualization $SCRATCH/viz/paired-end-input.qzv
+        --i-data $SCRATCH/amplicon-output/paired-end-input.qza \                 
+        --o-visualization $SCRATCH/amplicon-output/viz/paired-end-input.qzv
 ```
+
+To see how I've written each of my slurm scripts for qiime2, see: `qiime2-2024/slurm-scripts/import-seqs.slurm`. Once each of the slurm scripts is running, it will write to an output file that ends with the job id. If errors occur, check this file. This is a good record to keep when things run successfully, as it captures all the outputs. And the job id can give you a lot more information on your run if you execute `seff <jobid>`.
 
 ## 5.0 Remove primers
 
+For removing primers, you can use the qiime2 plug-in [cutadapt](https://docs.qiime2.org/2024.5/plugins/available/cutadapt/). For these samples we will use `trim-paired`, because sequences are already demultiplexed. 
+
+```
+qiime cutadapt trim-paired \
+    --i-demultiplexed-sequences $SCRATCH/amplicon-output/paired-end-input.qza \
+        --p-cores $SLURM_CPUS_PER_TASK \
+        --p-front-f CCAGCASCYGCGGTAATTCC \
+        --p-front-r ACTTTCGTTCTTGATYRA \
+        --p-error-rate 0.1 \
+        --p-overlap 3 \
+    --p-match-adapter-wildcards \
+        --o-trimmed-sequences $SCRATCH/amplicon-output/paired-end-input-trimmed.qza
+
+# Grab trim stats from cutadapt
+qiime demux summarize \
+    --i-data $SCRATCH/amplicon-output/paired-end-input-trimmed.qza \
+    --o-visualization $SCRATCH/amplicon-output/paired-end-input-trimmed.qzv
+```
 
 ## 6.0 Run DADA2
 
+We can also run [DADA2 as a plugin in qiime2](https://docs.qiime2.org/2024.5/plugins/available/dada2/denoise-paired/).
+
+```
+qiime dada2 denoise-paired \
+        --i-demultiplexed-seqs $SCRATCH/amplicon-output/paired-end-input-trimmed.qza \
+        --p-trunc-len-f 260 \
+        --p-trunc-len-r 225 \
+        --p-max-ee-f 2 \
+        --p-max-ee-r 2 \
+        --p-min-overlap 10 \
+        --p-pooling-method independent \
+        --p-n-reads-learn 1000000 \
+        --p-n-threads $SLURM_CPUS_PER_TASK \
+        --p-chimera-method pooled \
+        --o-table $SCRATCH/amplicon-output/paired-end-input-asv-table.qza \
+        --o-representative-sequences $SCRATCH/amplicon-output/paired-end-input-asvs-ref-seqs.qza \
+        --o-denoising-stats $SCRATCH/amplicon-output/paired-end-input-dada2-stats.qza
+
+qiime tools export \
+    --input-path $SCRATCH/amplicon-output/paired-end-input-asv-table.qza \
+    --output-path $SCRATCH/amplicon-output/output-tables/
+
+biom convert -i $SCRATCH/amplicon-output/output-tables/feature-table.biom \
+    -o $SCRATCH/amplicon-output/output-tables/samples-asv-table.tsv \
+    --to-tsv
+
+qiime metadata tabulate \
+       --m-input-file $SCRATCH/amplicon-output/paired-end-input-dada2-stats.qza \
+       --o-visualization $SCRATCH/amplicon-output/paired-end-input-dada2-stats.qzv
+
+```
+
 ### 6.1 Run DADA2 with exisiting references
 
-## 7.0 Convert files
 
-## 8.0 Taxonomy assignment
+## 7.0 Taxonomy assignment
 
+
+### 7.1 Reference Sequence Databases
+
+[Protist Ribosomal 2 database](https://app.pr2-database.org/pr2-database/) is the preferred database for microeukaryotes right now. 
+
+```
+qiime feature-classifier classify-consensus-vsearch \
+    --i-query $SCRATCH/paired-end-input-asvs-ref-seqs.qza \
+    --i-reference-reads /vortexfs1/omics/huber/db/pr2-db/pr2_version_4.14_seqs.qza \
+    --i-reference-taxonomy /vortexfs1/omics/huber/db/pr2-db/pr2_version_4.14_tax.qza \
+    --o-classification /vortexfs1/scratch/sarahhu/mcr-samples-taxa.qza \
+    --p-threads 8 \
+    --p-maxaccepts 10 \
+    --p-perc-identity 0.8 \
+    --p-min-consensus 0.70
+
+
+qiime tools export \
+    --input-path /vortexfs1/scratch/sarahhu/mcr-samples-taxa.qza \
+    --output-path /vortexfs1/scratch/sarahhu/mcr-samples-output/
+```
+
+
+## 8.0 Compile output files
