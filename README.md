@@ -370,25 +370,30 @@ qiime feature-classifier classify-consensus-vsearch \
     --p-min-consensus 0.75
 
 
+# Use the "classification" output
 qiime tools export \
-    --input-path $SCRATCH/amplicon-output/paired-end-tutorial-taxa.qza \
-    --output-path $SCRATCH/amplicon-output/tax-output/
-    
-#biom convert -i $SCRATCH/amplicon-output/output-tables/feature-table.biom \
-#    -o $SCRATCH/amplicon-output/output-tables/samples-asv-table.tsv \
-#    --to-tsv
+    --input-path $SCRATCH/amplicon-output/taxonomy-0.9_0.75/classification.qza \
+    --output-path $SCRATCH/amplicon-output/taxonomy-0.9_0.75/classification
 
+# Output gives you a taxonomy table:
+## $SCRATCH/amplicon-output/taxonomy-0.9_0.75/classification/taxonomy.tsv
 ```
-
 
 ## 8.0 Compile output files
 
 We have transferred output files to all be in .tsv files. We will import these in R.
 
-The majority of this work can be done in R. 
+
+Move files locally or to a central location. For instance, from the output qiime files in scratch, I will move these files to my home directory
+
+```
+mv $SCRATCH/amplicon-output/taxonomy-0.9_0.75/classification/taxonomy.tsv /home/skhu/qiime2-2024/q2-output/
+
+mv $SCRATCH/amplicon-output/output-tables/samples-asv-table.tsv /home/skhu/qiime2-2024/q2-output/
+```
 
 
-*in R*:
+Use Rscript: 
 ```
 merged_tax <- read_delim("$SCRATCH/amplicon-output/tax-output/taxonomy.tsv", delim = "\t")
 merged_asv <- read_delim("$SCRATCH/amplicon-output/output-tables/samples-asv-table.tsv", delim = "\t", skip = 1)
