@@ -324,17 +324,34 @@ For this taxonomy assignment, we are taking the reference sequences and comparin
 We're using [VSEARCH](https://github.com/torognes/vsearch) for this taxonomy assignment and it has a QIIME2 plugin [via the classify-consensus-vsearch option](https://docs.qiime2.org/2024.5/plugins/available/feature-classifier/classify-consensus-vsearch/).
 
 
-Once you get the reference sequence database of choice, it needs to be imported as a .qza file.
+Once you get the reference sequence database of choice, make sure it is unzipped, and then import it as a .qza file:
 ```
 qiime tools import \
-  --input-path /scratch/group/hu-lab/PR2/pr2_version_5.0.0_SSU_mothur.fasta.gz \
-  --output-path /scratch/group/hu-lab/PR2/pr2_version_5.0.0_seqs.qza \
-  --type 'FeatureData[Sequence]'
+  --type 'FeatureData[Sequence]' \
+  --input-path /scratch/group/hu-lab/PR2/pr2_version_5.0.0_SSU_mothur.fasta \
+  --output-path /scratch/group/hu-lab/PR2/pr2_version_5.0.0_seqs.qza
+```
 
+Make sure the taxonomy file has the correct column headers. `['Feature ID', 'Taxon']`
+
+To fix this in R:
+```
+# Import with no headers
+tax <- read.delim("pr2_version_5.0.0_SSU_mothur.tax", header = FALSE)
+# Rename headers
+colnames(tax) <- c("Feature ID", "Taxon")
+# Write as .tsv file
+write.table(tax, file = "pr2-tax.tsv", quote = FALSE, col.names = TRUE, sep = "\t", row.names=FALSE)
+```
+
+Then import as a QIIME2 artifact file:
+
+```
 qiime tools import \
-  --input-path /scratch/group/hu-lab/PR2/pr2_version_5.0.0_SSU_mothur.tax.gz \
-  --output-path /scratch/group/hu-lab/PR2/pr2_version_5.0.0_tax.qza \  
-  --type 'FeatureData[Taxonomy]'
+  --type 'FeatureData[Taxonomy]' \
+  --input-path /scratch/group/hu-lab/PR2/pr2-tax.tsv \
+  --output-path /scratch/group/hu-lab/PR2/pr2_version_5.0.0_tax.qza
+
 ```
 
 ### 7.2 Assign taxonomy with VSEARCH
@@ -356,16 +373,25 @@ qiime feature-classifier classify-consensus-vsearch \
 qiime tools export \
     --input-path $SCRATCH/amplicon-output/paired-end-tutorial-taxa.qza \
     --output-path $SCRATCH/amplicon-output/tax-output/
+    
+#biom convert -i $SCRATCH/amplicon-output/output-tables/feature-table.biom \
+#    -o $SCRATCH/amplicon-output/output-tables/samples-asv-table.tsv \
+#    --to-tsv
+
 ```
 
 
 ## 8.0 Compile output files
 
+We have transferred output files to all be in .tsv files. We will import these in R.
+
+The majority of this work can be done in R. 
 
 
+*in R*:
+```
+merged_tax <- read_delim("$SCRATCH/amplicon-output/tax-output/taxonomy.tsv", delim = "\t")
+merged_asv <- read_delim("$SCRATCH/amplicon-output/output-tables/samples-asv-table.tsv", delim = "\t", skip = 1)
+```
 
-## 9.0 Additional resources for learning QIIME2
-
-There are several options for visualizing your qiime
-
-## 10.0 Phyloseq
+## 9.0 Phyloseq
