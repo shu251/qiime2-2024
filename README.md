@@ -392,11 +392,9 @@ mv $SCRATCH/amplicon-output/taxonomy-0.9_0.75/classification/taxonomy.tsv /home/
 mv $SCRATCH/amplicon-output/output-tables/samples-asv-table.tsv /home/skhu/qiime2-2024/q2-output/
 ```
 
+Use Rscript: `r-script/compile-q2-result.R`
 
-Use Rscript: 
-```
-merged_tax <- read_delim("$SCRATCH/amplicon-output/tax-output/taxonomy.tsv", delim = "\t")
-merged_asv <- read_delim("$SCRATCH/amplicon-output/output-tables/samples-asv-table.tsv", delim = "\t", skip = 1)
-```
 
-## 9.0 Phyloseq
+### Page information
+
+_last updated S. Hu - July 8, 2024_
