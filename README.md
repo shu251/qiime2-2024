@@ -1,6 +1,6 @@
 # QIIME2 protocol
 
-The below tutorial is meant to be a beginning primer for using QIIME2 on an HPC. This was written for training purposes and often refers to the HPRC system we use at TAMU.
+The below tutorial is meant to be a primer for using QIIME2 on an HPC. This was written for training purposes and often refers to the HPRC system we use at TAMU.
 
 Example data uses 18S rRNA gene sequences, but any amplicon sequences can be used. Refer to the QIIME2 documentation for more information. 
 
@@ -8,7 +8,11 @@ _Last updated July 2024_
 
 ## 1.0 Set up working area
 
-There are two ways to "install" or "use" QIIME2 on an HPRC system. *(1.1)* One is to use Anaconda or _conda_. Conda is a package and software manager that allows a user to install programs on their own. As long as your HPRC system has conda installed, you can install any program available through conda. An alternative to this (but same idea) is mamba. *(1.2)* The second way is to see if a recent version of QIIME2 is already available on your HPRC system. 
+There are two ways to "install" or "use" QIIME2 on an HPRC system. 
+
+*(1.1)* One is to use Anaconda or _conda_. Conda is a package and software manager that allows a user to install programs on their own. As long as your HPRC system has conda installed, you can install any program available through conda. An alternative to this (but same idea) is mamba. 
+
+*(1.2)* The second way is to see if a recent version of QIIME2 is already available on your HPRC system. 
 
 _Reminder_ about the flow of data/information on the HPRC. When you login, you are on a "Login node". A login node has access to everything stored on the cluster, but it has little computing power. So it is really like a "staging area" to plan out your jobs. When you submit something to the "compute node", that is when you get access to larger amounts of CPUs and memory. Usually this is done through a job scheduler, like SLURM. Since we use SLURM, a lot of the below instructions are catered to slurm and all the scripts for running QIIME2 in SLURM can be found in `slurm-scripts`. 
 
@@ -392,9 +396,20 @@ mv $SCRATCH/amplicon-output/taxonomy-0.9_0.75/classification/taxonomy.tsv /home/
 mv $SCRATCH/amplicon-output/output-tables/samples-asv-table.tsv /home/skhu/qiime2-2024/q2-output/
 ```
 
-Use Rscript: `r-script/compile-q2-result.R`
+See Rscript: `r-script/compile-q2-result.R` for recommendations on compiling your data.
+
+### 8.1 Resources for analyzing ASV results
+
+* [decontam](https://github.com/benjjneb/decontam): remove ASVs that might be contaminates. Uses blank samples to determine ASV ID and threshold for determining a contaminate ASV.
+
+* [phyloseq](https://joey711.github.io/phyloseq/): Put ASV results into this package as phyloseq objects and there are lots of options for data wrangling, analyses, and visualizations. 
+
+* [vegan](https://cran.r-project.org/web/packages/vegan/vignettes/intro-vegan.pdf): powerful set of tools inside the vegan package that focus on microbiome statistics.
+
+* [Tools from Willis lab](https://github.com/adw96): look at DivNet, breakaway
+
 
 
 ### Page information
 
-_last updated S. Hu - July 8, 2024_
+_last updated S. Hu - July 11, 2024_
